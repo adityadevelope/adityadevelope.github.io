@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NFG Tutorial Booking — Instagram Carousel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ===== DESIGN TOKENS ===== */
+    :root {
+      --cream:       #F5F0E8;
+      --cream-dark:  #EDE7DA;
+      --ink:         #1A3C34;
+      --teal:        #3D9B8F;
+      --teal-light:  #B2DDD7;
+      --pink:        #F47B95;
+      --pink-light:  #FADDE3;
+      --yellow:      #F4D35E;
+      --yellow-light:#FBF0C4;
+      --orange:      #E8985E;
+      --white:       #FFFFFF;
+      --shadow:      rgba(0,0,0,.12);
+
+      --slide-w: 1080px;
+      --slide-h: 1350px;
+      --scale: 0.37;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      background: #FCF8F2; /* Putih cream */
+      padding: 0;
+      font-family: 'Quicksand', sans-serif;
+      color: var(--ink);
+      overflow-x: hidden;
+    }
+
+    .navbar {
+      background: var(--white);
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .navbar h1 {
+      font-family: 'Quicksand', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .btn-download {
+      background: var(--teal);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-family: 'Quicksand', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.3s, transform 0.2s;
+    }
+    .btn-download:hover { background: #2f7a70; transform: translateY(-2px); }
+    .btn-download:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+
+    /* helper: grid container */
+    .carousel-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 40px;
+      padding: 40px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* ===== SLIDE FRAME ===== */
+    .slide {
+      width:  var(--slide-w);
+      height: var(--slide-h);
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+      background-color: var(--cream);
+      background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png');
+      display: flex;
+      flex-direction: column;
+      transform: scale(var(--scale));
+      transform-origin: top left;
+      box-shadow: 0 12px 40px rgba(0,0,0,.35);
+      border-radius: 12px;
+    }
+    .slide-wrapper {
+      width:  calc(var(--slide-w) * var(--scale));
+      height: calc(var(--slide-h) * var(--scale));
+      flex-shrink: 0;
+    }
+
+    /* ===== PAINT BLOBS ===== */
+    .blob {
+      position: absolute;
+      z-index: 0;
+      opacity: .55;
+      pointer-events: none;
+    }
+    .blob-teal   { background: var(--teal);   border-radius: 42% 58% 62% 38% / 44% 52% 48% 56%; }
+    .blob-pink   { background: var(--pink);   border-radius: 58% 42% 38% 62% / 52% 44% 56% 48%; }
+    .blob-yellow { background: var(--yellow); border-radius: 50% 50% 60% 40% / 60% 40% 50% 50%; }
+    .blob-orange { background: var(--orange); border-radius: 38% 62% 50% 50% / 48% 56% 44% 52%; }
+
+    /* ===== LOGO PILL ===== */
+    .logo-pill {
+      position: relative; z-index: 2;
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--teal); color: var(--white);
+      font-weight: 700; font-size: 28px; letter-spacing: .5px;
+      padding: 14px 28px; border-radius: 22px;
+      box-shadow: 2px 4px 10px var(--shadow);
+      width: fit-content;
+    }
+
+    /* ===== PAGE NUMBER ===== */
+    .page-num {
+      position: absolute; top: 44px; right: 52px; z-index: 3;
+      font-family: 'Kalam', cursive; font-size: 40px; color: var(--ink);
+    }
+
+    /* ===== TYPOGRAPHY ===== */
+    .slide h1 {
+      font-family: 'Kalam', cursive;
+      font-size: 82px; line-height: 1.08;
+      position: relative; z-index: 2;
+    }
+    .slide h2 {
+      font-family: 'Kalam', cursive;
+      font-size: 62px; line-height: 1.12;
+      position: relative; z-index: 2;
+      margin-bottom: 8px;
+    }
+    .slide p {
+      font-size: 34px; line-height: 1.45; font-weight: 500;
+      position: relative; z-index: 2;
+    }
+
+    /* ===== HIGHLIGHT BRUSH ===== */
+    .hl {
+      display: inline; padding: 2px 14px; border-radius: 6px;
+      box-decoration-break: clone; -webkit-box-decoration-break: clone;
+    }
+    .hl-pink   { background: var(--pink);   color: var(--white); }
+    .hl-teal   { background: var(--teal);   color: var(--white); }
+    .hl-yellow { background: var(--yellow); color: var(--ink);   }
+    .hl-orange { background: var(--orange); color: var(--white); }
+
+    /* ===== STEP BADGE ===== */
+    .step-badge {
+      display: inline-flex; align-items: center; gap: 12px;
+      font-family: 'Kalam', cursive; font-size: 36px; font-weight: 700;
+      color: var(--white); background: var(--teal);
+      padding: 8px 24px; border-radius: 14px;
+      position: relative; z-index: 2;
+      margin-top: 12px;
+      margin-bottom: 12px;
+    }
+    .step-badge.pink   { background: var(--pink);   }
+    .step-badge.yellow { background: var(--yellow); color: var(--ink); }
+    .step-badge.orange { background: var(--orange); }
+
+    /* ===== SCREENSHOT FRAME (1 Slide 1 Screenshot) ===== */
+    .ss-frame {
+      position: relative; z-index: 2;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 8px solid var(--white);
+      box-shadow: 6px 8px 28px var(--shadow);
+      background: var(--white);
+      flex-grow: 1; /* Mengisi sisa ruang tinggi slide */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 24px;
+    }
+    .ss-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain; /* Full screen secara proporsional tanpa kepotong */
+      display: block;
+    }
+
+    /* ===== DOODLE TEXT & ARROWS ===== */
+    .doodle {
+      position: absolute; z-index: 3;
+      font-family: 'Kalam', cursive;
+      color: var(--ink);
+    }
+    .arrow-pointer {
+      display: none;
+    }
+    .deco-lines {
+      position: absolute; z-index:1;
+      color: var(--pink);
+      font-size: 60px;
+      transform: rotate(-20deg);
+      line-height: 1;
+    }
+
+    /* ===== INNER PADDING ===== */
+    .slide-inner {
+      padding: 48px 56px;
+      display: flex; flex-direction: column;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+
+<div class="navbar">
+  <h1>🌱 NFG Instagram Feed</h1>
+  <button class="btn-download" id="downloadBtn">
+    <span>⬇️</span> Download Semua Slide (ZIP)
+  </button>
+</div>
+
+<div class="carousel-row">
+
+<!-- ==================== SLIDE 1 ==================== -->
+<div class="slide-wrapper"><div class="slide">
+  <div class="blob blob-teal" style="width:420px;height:360px;top:-100px;left:-120px"></div>
+  <div class="blob blob-yellow" style="width:360px;height:320px;bottom:-80px;right:-60px;opacity:.7"></div>
+  <div class="deco-lines" style="top:60px;right:140px">///</div>
+  <div class="slide-inner">
+    <div class="logo-pill">🌱 NURTURE FOR GROWTH</div>
+    <div class="page-num">1/18</div>
+    <h1 style="margin-top:24px;transform:rotate(-2deg)">Tutorial<br>Booking Sesi<br><span class="hl hl-pink">Psikolog</span> 📋</h1>
+    <p style="margin-top:16px">Langkah demi langkah, dari daftar akun sampai sesi konseling dimulai! Gampang banget~</p>
+    
+    <div class="arrow-pointer" style="top: 480px; right: 120px; transform: rotate(15deg);">⬇️</div>
+    
+    <div class="ss-frame" style="transform:rotate(1deg);">
+      <img src="Screenshot 2026-10-10 112412.png" alt="Halaman utama NFG">
+    </div>
+    <div class="doodle" style="bottom:70px;left:70px;font-size:52px;transform:rotate(-8deg)">Geser yuk! →</div>
+  </div>
+</div></div>
+
+<!-- ==================== SLIDE 2 ==================== -->
+<div class="slide-wrapper"><div class="slide">
+  <div class="blob blob-pink" style="width:280px;height:240px;top:-60px;right:-80px;opacity:.4"></div>
+  <div class="slide-inner">
+    <div class="logo-pill">🌱 NURTURE FOR GROWTH</div>
+    <div class="page-num">2/18</div>
+    <div class="step-badge">Step 1</div>
+    <h2>Daftar <span class="hl hl-teal">Akun</span></h2>
+    <p>Buka nurtureforgrowth.com dan klik tombol hijau <em>"Booking Sekarang"</em>, lalu isi data pendaftaran.</p>
+    
+    <div class="arrow-pointer" style="top: 360px; left: 45%; transform: rotate(-10deg);">⬇️</div>
+    
+    <div class="ss-frame">
+      <img src="Screenshot 2026-10-10 112519.png" alt="Daftar akun">
+    </div>
+  </div>
+</div></div>
+
+<!-- ==================== SLIDE 3 ==================== -->
+<div class="slide-wrapper"><div class="slide">
+  <div class="blob blob-yellow" style="width:300px;height:260px;top:-60px;left:-80px;opacity:.5"></div>
+  <div class="slide-inner">
+    <div class="logo-pill">🌱 NURTURE FOR GROWTH</div>
+    <div class="page-num">3/18</div>
+    <div class="step-badge yellow">Step 2</div>
+    <h2>Cek <span class="hl hl-yellow">Email</span> OTP 📧</h2>
+    <p>Setelah daftar, kode OTP dikirim ke emailmu. Buka inbox Gmail dan salin kodenya.</p>
+    
+    <div class="arrow-pointer" style="top: 360px; right: 20%; transform: rotate(20deg);">↙️</div>
+    
+    <div class="ss-frame">
+      <img src="Screenshot 2026-10-10 112612.png" alt="Email kode OTP di Gmail">
+    </div>
+  </div>
+</div></div>
+
+<!-- ==================== SLIDE 4 ==================== -->
+<div class="slide-wrapper"><div class="slide">
+  <div class="blob blob-teal" style="width:220px;height:200px;bottom:-40px;right:-60px;opacity:.35"></div>
+  <div class="slide-inner">
+    <div class="logo-pill">🌱 NURTURE FOR GROWTH</div>
+    <div class="page-num">4/18</div>
+    <div class="step-badge pink">Step 3</div>
+    <h2>Verifikasi <span class="hl hl-pink">OTP</span></h2>
+    <p>Kembali ke web NFG, lalu masukkan kode OTP yang sudah kamu dapat dari email.</p>
+    
+    <div class="arrow-pointer" style="top: 360px; left: 30%; transform: rotate(-15deg);">⬇️</div>
+    
+    <div class="ss-frame">
+      <img src="Screenshot 2026-10-10 112556.png" alt="Halaman verifikasi OTP">
+    </div>
+  </div>
+</div></div>
+
+<!-- ==================== SLIDE 5 ==================== -->
+<div class="slide-wrapper"><div class="slide">
+  <div class="blob blob-pink" style="width:320px;height:280px;top:-80px;right:-100px;opacity:.4"></div>
+  <div class="slide-inner">
+    <div class="logo-pill">🌱 NURTURE FOR GROWTH</div>
+    <div class="page-num">5/18</div>
+    <div class="step-badge">Step 4</div>
+    <h2>Berhasil <span class="hl hl-teal">Login</span></h2>
+    <p>Sekarang login dengan email & password yang sudah kamu buat tadi.</p>
+    
+    <div class="ss-frame">
+      <img src="Screenshot 2026-10-10 112637.png" alt="Halaman login">
+    </div>
+  </div>
+</div></div>
+
+<!-- ==================== SLIDE 6 ==================== -->
+<div class="slide-wrapper"><div class="slide">
+  <div class="blob blob-orange" style="width:260px;height:240px;bottom:-60px;left:-80px;opacity:.4"></div>
+  <div class="slide-inner">
+    <div class="logo-pill">🌱 NURTURE FOR GROWTH</div>
+    <div class="page-num">6/18</div>
+    <div class="step-badge orange">Step 5</div>
+    <h2>Masuk <span class="hl hl-orange">Dashboard</span> 🏠</h2>
+    <p>Selamat datang di Dashboard! Klik menu <strong>"Booking Konseling"</strong> di panel sebelah kiri.</p>
+    
+    <div class="arrow-pointer" style="top: 450px; left: 15%; transform: rotate(110deg);">↘️</div>
+    
+    <div class="ss-frame">
+      <img src="Screenshot 2026-10-10 112646.png" alt="Dashboard NFG">
+    </div>
+  </div>
+</div></div>
+
+<!-- ==================== SLIDE 7 ==================== -->
+<div class="slide-wrapper"><div class="slide">
+  <div class="blob blob-teal" style="width:240px;height:220px;top:-50px;left:-70px;opacity:.3"></div>
+  <div class="slide-inner">
+    <div class="logo-pill">🌱 NURTURE FOR GROWTH</div>
+    <div class="page-num">7/18</div>
+    <div class="step-badge yellow">Step 6</div>
+    <h2>Pilih <span class="hl hl-yellow">Keluhan</span></h2>
+    <p>Pilih topik atau tag keluhan yang sedang kamu rasakan (bisa pilih lebih dari satu).</p>
+    
+    <div class="ss-frame">
+      <img src="Screenshot 2026-10-10 121902.png" alt="Pilih keluhan">
+    </div>
+    <div class="doodle" style="bottom:70px;right:70px;font-size:38px;transform:rotate(-5deg)">Boleh pilih banyak! ✨</div>
+  </div>
+</div></div>
+
+<!-- ==================== SLIDE 8 ==================== -->
+<div class="slide-wrapper"><div class="slide">
+  <div class="blob blob-pink" style="width:300px;height:260px;bottom:-60px;right:-80px;opacity:.35"></div>
+  <div class="slide-inner">
+    <div class="logo-pill">🌱 NURTURE FOR GROWTH</div>
+    <div class="page-num">8/18</div>
+    <div class="step-badge">Step 7</div>
+    <h2>Ceritakan <span class="hl hl-teal">Kondisimu</span> 💬</h2>
+    <p>Tulis cerita singkat mengenai kondisimu agar psikolog bisa memahami kondisimu sebelum sesi.</p>
+    
+    <div class="arrow-pointer" style="top: 380px; right: 25%; transform: rotate(-25deg);">↙️</div>
+    
+    <div class="ss-frame">
+      <img src="Screenshot 2026-10-10 121930.png" alt="Isi keluhan & ceritakan">
+    </div>
+  </div>
+</div></div>
+
+<!-- ==================== SLIDE 9 ==================== -->
+<div class="slide-wrapper"><div class="slide">
+  <div class="blob blob-yellow" style="width:340px;height:300px;top:-80px;left:-100px;opacity:.45"></div>
+  <div class="slide-inner">
+    <div class="logo-pill">🌱 NURTURE FOR GROWTH</div>
+    <div class="page-num">9/18</div>
+    <div class="step-badge pink">Step 8</div>
+    <h2>Rekomendasi <span class="hl hl-pink">Psikolog</span> ⭐</h2>
+    <p>Sistem akan menampilkan psikolog yang cocok. Klik <strong>"Pilih & Jadwalkan"</strong>.</p>
+    
+    <div class="ss-frame">
+      <img src="Screenshot 2026-10-10 121938.png" alt="Daftar rekomendasi psikolog">
+    </div>
+  </div>
+</div></div>
+
+<!-- ==================== SLIDE 10 ==================== -->
+<div class="slide-wrapper"><div class="slide">
+  <div class="blob blob-teal" style="width:280px;height:260px;bottom:-70px;right:-90px;opacity:.35"></div>
+  <div class="slide-inner">
+    <div class="logo-pill">🌱 NURTURE FOR GROWTH</div>
+    <div class="page-num">10/18</div>
+    <div class="step-badge orange">Step 9</div>
+    <h2>Lanjut Isi <span class="hl hl-orange">Consent</span></h2>
+    <p>Jika kamu baru pertama kali, akan muncul pop-up untuk mengisi form persetujuan (Informed Consent).</p>
+    
+    <div class="ss-frame">
+      <img src="Screenshot 2026-10-10 121951.png" alt="Popup informed consent">
+    </div>
+  </div>
+</div></div>
+
+<!-- ==================== SLIDE 11 ==================== -->
+<div class="slide-wrapper"><div class="slide">
+  <div class="blob blob-orange" style="width:220px;height:200px;top:-50px;left:-60px;opacity:.4"></div>
+  <div class="slide-inner">
+    <div class="logo-pill">🌱 NURTURE FOR GROWTH</div>
+    <div class="page-num">11/18</div>
+    <div class="step-badge">Step 10</div>
+    <h2>Form <span class="hl hl-teal">Informed Consent</span> 📝</h2>
+    <p>Baca, centang semua pernyataan, lalu berikan tanda tangan elektronikmu.</p>
+    
+    <div class="arrow-pointer" style="top: 350px; left: 20%; transform: rotate(0deg);">⬇️</div>
+    
+    <div class="ss-frame">
+      <img src="Screenshot 2026-10-10 122037.png" alt="Informed consent form">
+    </div>
+  </div>
+</div></div>
+
+<!-- ==================== SLIDE 12 ==================== -->
+<div class="slide-wrapper"><div class="slide">
+  <div class="blob blob-pink" style="width:320px;height:280px;bottom:-80px;right:-100px;opacity:.35"></div>
+  <div class="slide-inner">
+    <div class="logo-pill">🌱 NURTURE FOR GROWTH</div>
+    <div class="page-num">12/18</div>
+    <div class="step-badge yellow">Step 11</div>
+    <h2>Pilih <span class="hl hl-yellow">Tipe Sesi</span></h2>
+    <p>Pilih psikolog pilihanmu dan tentukan apakah kamu ingin Video Call atau Konsultasi Tatap Muka.</p>
+    
+    <div class="ss-frame">
+      <img src="Screenshot 2026-10-10 122134.png" alt="Pilih metode">
+    </div>
+  </div>
+</div></div>
+
+<!-- ==================== SLIDE 13 ==================== -->
+<div class="slide-wrapper"><div class="slide">
+  <div class="blob blob-teal" style="width:250px;height:220px;top:-60px;right:-80px;opacity:.4"></div>
+  <div class="slide-inner">
+    <div class="logo-pill">🌱 NURTURE FOR GROWTH</div>
+    <div class="page-num">13/18</div>
+    <div class="step-badge pink">Step 12</div>
+    <h2>Tentukan <span class="hl hl-pink">Jadwal</span> 📆</h2>
+    <p>Pilih tanggal dan jam konseling sesuai jadwal yang tersedia dari psikologmu.</p>
+    
+    <div class="ss-frame">
+      <img src="Screenshot 2026-10-10 122241.png" alt="Pilih jadwal">
+    </div>
+  </div>
+</div></div>
+
+<!-- ==================== SLIDE 14 ==================== -->
+<div class="slide-wrapper"><div class="slide">
+  <div class="blob blob-yellow" style="width:280px;height:260px;bottom:-70px;left:-90px;opacity:.5"></div>
+  <div class="slide-inner">
+    <div class="logo-pill">🌱 NURTURE FOR GROWTH</div>
+    <div class="page-num">14/18</div>
+    <div class="step-badge">Step 13</div>
+    <h2>Cek <span class="hl hl-teal">Estimasi Biaya</span></h2>
+    <p>Periksa detail harga dan jadwal, lalu klik <strong>"Kirim Permintaan Booking"</strong>.</p>
+    
+    <div class="ss-frame">
+      <img src="Screenshot 2026-10-10 122303.png" alt="Detail pembayaran">
+    </div>
+    <div class="doodle" style="bottom:80px;right:70px;font-size:36px;transform:rotate(-8deg)">Ada promo lho! 🏷️</div>
+  </div>
+</div></div>
+
+<!-- ==================== SLIDE 15 ==================== -->
+<div class="slide-wrapper"><div class="slide">
+  <div class="blob blob-orange" style="width:300px;height:280px;top:-70px;left:-100px;opacity:.4"></div>
+  <div class="slide-inner">
+    <div class="logo-pill">🌱 NURTURE FOR GROWTH</div>
+    <div class="page-num">15/18</div>
+    <div class="step-badge yellow">Step 14</div>
+    <h2>Lakukan <span class="hl hl-yellow">Pembayaran</span> 💳</h2>
+    <p>Setelah kirim booking, segera transfer biaya konseling sesuai instruksi dan unggah buktinya.</p>
+    
+    <div class="arrow-pointer" style="top: 380px; right: 20%; transform: rotate(10deg);">⬇️</div>
+    
+    <div class="ss-frame">
+      <img src="Screenshot 2026-10-10 122329.png" alt="Pembayaran">
+    </div>
+  </div>
+</div></div>
+
+<!-- ==================== SLIDE 16 ==================== -->
+<div class="slide-wrapper"><div class="slide">
+  <div class="blob blob-teal" style="width:350px;height:300px;bottom:-80px;right:-100px;opacity:.35"></div>
+  <div class="slide-inner">
+    <div class="logo-pill">🌱 NURTURE FOR GROWTH</div>
+    <div class="page-num">16/18</div>
+    <div class="step-badge pink">Step 15</div>
+    <h2>Pantau <span class="hl hl-pink">Status Booking</span></h2>
+    <p>Cek menu <strong>"Riwayat Konseling Saya"</strong>. Statusmu akan Menunggu Verifikasi atau Disetujui.</p>
+    
+    <div class="ss-frame">
+      <img src="Screenshot 2026-10-10 122402.png" alt="Riwayat konseling">
+    </div>
+  </div>
+</div></div>
+
+<!-- ==================== SLIDE 17 ==================== -->
+<div class="slide-wrapper"><div class="slide">
+  <div class="blob blob-pink" style="width:280px;height:240px;top:-60px;right:-80px;opacity:.4"></div>
+  <div class="slide-inner">
+    <div class="logo-pill">🌱 NURTURE FOR GROWTH</div>
+    <div class="page-num">17/18</div>
+    <div class="step-badge">Step 16</div>
+    <h2>Lihat <span class="hl hl-teal">Detail Sesi</span></h2>
+    <p>Klik tombol <strong>"Detail"</strong> pada riwayatmu untuk melihat informasi lengkap terkait jadwal dan link sesi.</p>
+    
+    <div class="ss-frame">
+      <img src="Screenshot 2026-10-10 122449.png" alt="Detail sesi">
+    </div>
+  </div>
+</div></div>
+
+<!-- ==================== SLIDE 18 ==================== -->
+<div class="slide-wrapper"><div class="slide">
+  <div class="blob blob-teal" style="width:400px;height:350px;top:-100px;left:-120px;opacity:.5"></div>
+  <div class="blob blob-yellow" style="width:200px;height:180px;top:200px;right:-40px;opacity:.4"></div>
+  <div class="deco-lines" style="top:80px;right:160px;color:var(--pink)">///</div>
+  <div class="slide-inner">
+    <div class="logo-pill">🌱 NURTURE FOR GROWTH</div>
+    <div class="page-num">18/18</div>
+    <h1 style="margin-top:24px;transform:rotate(-2deg)">Booking <span class="hl hl-teal">Berhasil!</span> 🎉</h1>
+    <p style="margin-top:16px">Sesimu siap dimulai. Pastikan hadir tepat waktu dan bersiap di <strong>Ruang Tunggu</strong> (jika online).</p>
+    
+    <div class="ss-frame">
+      <img src="Screenshot 2026-10-10 122453.png" alt="Bayar & ruang tunggu">
+    </div>
+    <div class="doodle" style="bottom:60px;left:70px;font-size:42px;transform:rotate(-6deg)">Sampai jumpa! 😊</div>
+    <div class="doodle" style="bottom:60px;right:70px;font-size:38px;transform:rotate(4deg)">Link di bio 🔗</div>
+  </div>
+</div></div>
+
+</div><!-- /carousel-row -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+  document.getElementById('downloadBtn').addEventListener('click', async function() {
+    const btn = this;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Memproses... Mohon tunggu';
+    btn.disabled = true;
+
+    try {
+      const zip = new JSZip();
+      const slides = document.querySelectorAll('.slide');
+      
+      for (let i = 0; i < slides.length; i++) {
+        const slide = slides[i];
+        
+        // Simpan state lama
+        const oldTransform = slide.style.transform;
+        const oldBgImage = getComputedStyle(slide).backgroundImage;
+        
+        // Hapus transform dan background-image eksternal sementara (mencegah error CORS)
+        slide.style.transform = 'scale(1)';
+        slide.style.backgroundImage = 'none';
+        
+        const canvas = await html2canvas(slide, {
+          scale: 1,
+          useCORS: true,
+          allowTaint: true, // fallback
+          backgroundColor: '#F5F0E8'
+        });
+        
+        // Kembalikan ke keadaan semula
+        slide.style.transform = oldTransform || 'scale(var(--scale))';
+        slide.style.backgroundImage = oldBgImage;
+        
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        const base64Data = dataUrl.split(',')[1];
+        
+        zip.file(`Slide_${i+1}.jpg`, base64Data, {base64: true});
+      }
+      
+      const content = await zip.generateAsync({type: 'blob'});
+      saveAs(content, 'NFG_IG_Feed.zip');
+    } catch (e) {
+      console.error("Download Error:", e);
+      alert('Terjadi kesalahan saat mengunduh: ' + e.message + '\n\nPastikan Anda membukanya melalui Live Server, bukan dengan klik dua kali (file://).');
+    } finally {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    }
+  });
+</script>
+
+</body>
+</html>
